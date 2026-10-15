@@ -1,0 +1,1 @@
+PENDIENTE: Crecimiento de los algoritmos de búsqueda (Punto 2). Redactar con las Figuras 4a/4b: comparar el crecimiento observado de cada algoritmo con su complejidad teórica (O(n), O(log n), O(√n), O(log log n)), indicar cuál es más rápido y a partir de qué n se nota la diferencia, y explicar por qué la búsqueda lineal es la referencia.

@@ -1,0 +1,1 @@
+PENDIENTE: Compilado frente a interpretado, búsqueda (Punto 2). Redactar con la Figura 5: explicar las diferencias entre Java y Python para cada algoritmo (la brecha debería ser mayor en los algoritmos con más iteraciones, como el lineal y por saltos, y menor en los logarítmicos, donde el tiempo por búsqueda es muy pequeño y pesa más el costo fijo de llamar a la función).

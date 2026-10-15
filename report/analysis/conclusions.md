@@ -1,0 +1,1 @@
+PENDIENTE: Conclusiones generales. Resumir, con tus propias palabras y con cifras de tus mediciones, qué algoritmos resultaron mejores en cada caso, si el comportamiento coincidió con la teoría y qué sorprendió.
