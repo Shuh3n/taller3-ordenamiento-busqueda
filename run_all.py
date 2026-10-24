@@ -5,7 +5,8 @@
   python run_all.py --quick             smoke test: n <= 10,000, 2 repetitions, output in smoke/
   python run_all.py --steps sort_python,search_python   run only some steps
 
-Steps, in order: data, compile, sort_java, sort_python, search_java, search_python, report.
+Steps, in order: data, compile, sort_java, sort_python, search_java, search_python, figures.
+Output: CSV files in results/ and PNG figures in report/figures/ (nothing else).
 The script stops at the first failing step and tells you how to resume from it.
 """
 import argparse
@@ -18,7 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 JAVA_SRC = [f"java/src/{n}.java" for n in
             ("Util", "SortAlgorithms", "SearchAlgorithms", "BenchSort", "BenchSearch")]
-STEP_ORDER = ["data", "compile", "sort_java", "sort_python", "search_java", "search_python", "report"]
+STEP_ORDER = ["data", "compile", "sort_java", "sort_python", "search_java", "search_python", "figures"]
 
 
 def fmt(seconds):
@@ -40,7 +41,7 @@ def build_steps(quick):
         "sort_python": [py, "python/bench_sort.py", *extra("sort_python.csv")],
         "search_java": ["java", "-cp", "java/out", "BenchSearch", *extra("search_java.csv")],
         "search_python": [py, "python/bench_search.py", *extra("search_python.csv")],
-        "report": [py, "tools/make_report.py"],
+        "figures": [py, "tools/make_figures.py"],
     }
 
 
@@ -54,8 +55,8 @@ def main():
     unknown = [s for s in wanted if s not in STEP_ORDER]
     if unknown:
         sys.exit(f"Unknown step(s): {', '.join(unknown)}. Valid: {', '.join(STEP_ORDER)}")
-    if args.quick and "report" in wanted and not args.steps:
-        wanted.remove("report")  # the report reads results/, not smoke/
+    if args.quick and "figures" in wanted and not args.steps:
+        wanted.remove("figures")  # the figures read results/, not smoke/
     wanted = [s for s in STEP_ORDER if s in wanted]
 
     commands = build_steps(args.quick)
@@ -75,8 +76,8 @@ def main():
     print(f"\nAll done in {fmt(time.time() - total)}.")
     if args.quick:
         print("Quick results are in smoke/ (do not use them for the report).")
-    elif "report" in wanted:
-        print("Report: report/Taller3.pdf")
+    elif "figures" in wanted:
+        print("Results: results/*.csv   Figures: report/figures/*.png")
 
 
 if __name__ == "__main__":

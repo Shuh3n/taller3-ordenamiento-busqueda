@@ -8,7 +8,7 @@ y **Python** (interpretado): 24 implementaciones. Fuente principal: GeeksforGeek
 ### 1. Preparar el computador (cada integrante, una sola vez)
 
 1. Instalar **JDK 17 o superior** (`javac -version` debe funcionar) y **Python 3.10 o superior**.
-2. Instalar las librerías: `pip install numpy matplotlib reportlab`
+2. Instalar las librerías: `pip install numpy matplotlib`
 3. Clonar el repositorio: `git clone <URL-del-repositorio>` y entrar a la carpeta del proyecto.
 
 ### 2. Ejecutar los experimentos (UNA sola persona, en UN solo computador)
@@ -19,23 +19,19 @@ Todas las mediciones deben salir de la misma máquina para que los tiempos sean 
 2. Corrida completa (puede tardar de 1 a 2 horas): `python run_all.py`
    - Dejar el computador enchufado, sin programas pesados y sin ejecutar nada más en paralelo.
    - Si un paso falla, el script indica con qué comando continuar (`python run_all.py --steps ...`).
-3. Al terminar quedan los CSV en `results/`, las gráficas en `report/figures/` y el PDF en `report/Taller3.pdf`.
+3. Al terminar quedan los CSV en `results/` y las gráficas en `report/figures/` (solo resultados y gráficas).
 4. Subir los resultados al repositorio: `git add results report && git commit -m "feat: add benchmark results" && git push`
 
-### 3. Redactar el análisis (todo el equipo)
+### 3. Redactar el informe (todo el equipo)
 
-1. Cada integrante hace `git pull` y lee los resultados (`results/*.csv`, `report/figures/`).
-2. El análisis vive en `report/analysis/*.md` (un archivo por sección). Los archivos que empiezan con
-   `PENDIENTE` salen en rojo en el PDF. Repartan los archivos entre integrantes para evitar conflictos en git.
-3. El texto debe ser **con sus propias palabras** y apoyarse en **sus mediciones** (tablas, gráficas o cálculos).
-4. Completar `report/meta.json` (integrantes, curso, URL del repositorio) y revisar `report/analysis/ai_use.md`
-   (sección «Uso de inteligencia artificial»: debe describir el uso real que hizo el grupo).
-5. Regenerar el documento: `python tools/make_report.py` (usa los CSV ya existentes, no repite las mediciones).
+1. Cada integrante hace `git pull` y lee los resultados (`results/*.csv` y `report/figures/*.png`).
+2. El informe se redacta **aparte** (Overleaf, Word o Google Docs) a partir de esos CSV y gráficas:
+   este repositorio **no** genera ningún documento.
 
 ### 4. Entrega
 
-- **Un único PDF** (`report/Taller3.pdf`) con los tres puntos completos, subido por **una sola persona** en
-  representación del grupo.
+- El informe final (documento aparte, armado con los CSV y las gráficas de este repositorio) lo sube
+  **una sola persona** en representación del grupo.
 - El código, los resultados y los datos de prueba (o el programa que los genera con semilla fija,
   `tools/generate_data.py`) están en este repositorio.
 - La sustentación es **grupal y obligatoria**: todos deben poder explicar el código y el análisis.
@@ -44,12 +40,12 @@ Todas las mediciones deben salir de la misma máquina para que los tiempos sean 
 
 | Carpeta o archivo | Contenido |
 |---|---|
-| `run_all.py` | Ejecuta todo el flujo en orden (datos, compilación, 4 benchmarks, PDF) |
+| `run_all.py` | Ejecuta todo el flujo en orden (datos, compilación, 4 benchmarks y gráficas) |
 | `java/src/` | Algoritmos y benchmarks en Java |
 | `python/` | Algoritmos y benchmarks en Python |
-| `tools/` | Generador de datos (`generate_data.py`) y del PDF (`make_report.py`) |
+| `tools/` | Generador de datos (`generate_data.py`) y de gráficas (`make_figures.py`) |
 | `results/` | CSV con todas las mediciones |
-| `report/` | `meta.json`, `analysis/*.md`, `figures/` y `Taller3.pdf` |
+| `report/` | Gráficas (PNG) generadas a partir de los CSV |
 
 ---
 
@@ -77,13 +73,12 @@ tools/generate_data.py     generates the test data (fixed seed, plain text)
 java/src/                  SortAlgorithms, SearchAlgorithms, BenchSort, BenchSearch, Util
 python/                    sorting.py, searching.py, bench_sort.py, bench_search.py, common.py
 results/                   CSV output of the benchmarks (4 files)
-report/                    meta.json, analysis/*.md (narrative), figures/ and Taller3.pdf (generated)
-tools/make_report.py       figures + tables + final PDF from results/*.csv
+report/figures/            PNG figures generated from results/*.csv
 ```
 
 ## Requirements
 
-JDK 17+ (tested with 26), Python 3.10+, and `pip install numpy matplotlib reportlab`.
+JDK 17+ (tested with 26), Python 3.10+, and `pip install numpy matplotlib`.
 
 ## How to run
 
@@ -98,7 +93,7 @@ below sequentially and stops at the first failure. Manual steps, in order, one a
    `java -cp java/out BenchSort` and `python python/bench_sort.py`
 4. Search benchmarks:
    `java -cp java/out BenchSearch` and `python python/bench_search.py`
-5. Build figures and the PDF: `python tools/make_report.py` (writes `report/Taller3.pdf`)
+5. Build the figures: `python tools/make_figures.py` (writes `report/figures/*.png`; no document is generated).
 
 **Quick smoke test** (a couple of minutes): add `--max-n 10000 --reps 2 --out smoke/<file>.csv` to any
 benchmark command, and do not use those files for the report.
@@ -131,5 +126,4 @@ Options of every benchmark: `--data`, `--out`, `--max-n`, `--reps` (default 5), 
 
 ## Writing the report
 
-`make_report.py` generates all figures and tables. The narrative lives in `report/analysis/*.md`; files that start
-with `PENDIENTE` are rendered in red in the PDF. Edit `report/meta.json` with the group members and the repository URL.
+`make_figures.py` generates all PNG figures from the CSV files in `results/`.
