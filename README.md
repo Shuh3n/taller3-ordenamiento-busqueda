@@ -25,12 +25,12 @@ Todas las mediciones deben salir de la misma máquina para que los tiempos sean 
 ### 3. Redactar el informe (todo el equipo)
 
 1. Cada integrante hace `git pull` y lee los resultados (`results/*.csv` y `report/figures/*.png`).
-2. El informe se redacta **aparte** (Overleaf, Word o Google Docs) a partir de esos CSV y gráficas:
-   este repositorio **no** genera ningún documento.
+2. El informe lo redacta **a mano** todo el equipo, apoyándose en esos CSV y gráficas.
+   Este repositorio solo entrega resultados y gráficas: el documento final no sale del código.
 
 ### 4. Entrega
 
-- El informe final (documento aparte, armado con los CSV y las gráficas de este repositorio) lo sube
+- El informe final, escrito a mano por el equipo con los CSV y las gráficas de este repositorio, lo sube
   **una sola persona** en representación del grupo.
 - El código, los resultados y los datos de prueba (o el programa que los genera con semilla fija,
   `tools/generate_data.py`) están en este repositorio.
@@ -93,7 +93,7 @@ below sequentially and stops at the first failure. Manual steps, in order, one a
    `java -cp java/out BenchSort` and `python python/bench_sort.py`
 4. Search benchmarks:
    `java -cp java/out BenchSearch` and `python python/bench_search.py`
-5. Build the figures: `python tools/make_figures.py` (writes `report/figures/*.png`; no document is generated).
+5. Build the figures: `python tools/make_figures.py` (writes `report/figures/*.png`).
 
 **Quick smoke test** (a couple of minutes): add `--max-n 10000 --reps 2 --out smoke/<file>.csv` to any
 benchmark command, and do not use those files for the report.

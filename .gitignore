@@ -3,5 +3,3 @@ smoke/
 java/out/
 __pycache__/
 *.pyc
-report/overleaf/main.pdf
-report/informe_overleaf.zip
