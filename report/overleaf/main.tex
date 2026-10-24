@@ -1,0 +1,818 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage[a4paper,margin=2.4cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}\renewcommand{\contentsname}{Contenido}}
+
+\setlist{itemsep=2pt,topsep=4pt}
+\setlength{\parskip}{4pt}
+\setlength{\parindent}{0pt}
+\renewcommand{\arraystretch}{1.12}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Taller 3: Ordenamiento y B\'usqueda}
+\fancyhead[R]{\small Universidad del Quind\'io}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+% Texto que el grupo debe completar o confirmar antes de entregar.
+\newcommand{\pendiente}[1]{\textcolor{red}{\textbf{[#1]}}}
+\newcommand{\bigO}[1]{\ensuremath{O(#1)}}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% Dos gr\'aficas (equipo A y equipo B), una debajo de la otra, a ancho completo.
+% #1 nombre base del PNG, #2 ancho relativo, #3 pie de figura, #4 etiqueta
+\newcommand{\figpair}[4]{%
+  \begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[t]{\linewidth}
+      \centering
+      \includegraphics[width=#2\linewidth]{figs/A_#1.png}
+      \caption{Equipo A.}
+    \end{subfigure}\par\medskip
+    \begin{subfigure}[t]{\linewidth}
+      \centering
+      \includegraphics[width=#2\linewidth]{figs/B_#1.png}
+      \caption{Equipo B.}
+    \end{subfigure}
+    \caption{#3}\label{#4}
+  \end{figure}}
+
+\begin{document}
+
+% ====================================================================================== PORTADA
+\begin{titlepage}
+  \centering
+  \vspace*{2.2cm}
+  {\large Universidad del Quind\'io\par}
+  \vspace{2.2cm}
+  {\Huge\bfseries Taller 3\par}
+  \vspace{0.4cm}
+  {\LARGE\bfseries Ordenamiento y B\'usqueda\par}
+  \vspace{0.6cm}
+  {\large Comparaci\'on experimental de algoritmos de ordenamiento y b\'usqueda\\en Java y Python\par}
+  \vspace{2.6cm}
+  {\large Santiago Orozco Zuluaga\par}
+  {\large Jhony Alexander Perea Perea\par}
+  \vspace{1.6cm}
+  {\large Curso: An\'alisis de Algoritmos \pendiente{confirmar nombre del curso y docente}\par}
+  \vspace{0.6cm}
+  {\large Repositorio:\\ \url{https://github.com/Shuh3n/taller3-ordenamiento-busqueda}\par}
+  \vfill
+  {\large Octubre de 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+% ================================================================================== PRESENTACI\'ON
+\section{Presentaci\'on}
+
+Este informe documenta un estudio experimental de seis algoritmos de ordenamiento (Insertion Sort,
+Dual-Pivot QuickSort, Merge Sort, Heap Sort, Radix Sort y Bucket Sort) y seis algoritmos de b\'usqueda
+(lineal, binaria, ternaria, por saltos, por interpolaci\'on y exponencial). Cada algoritmo se implement\'o
+con la misma l\'ogica en dos lenguajes: \textbf{Java} (compilado, con compilaci\'on JIT) y \textbf{Python}
+(interpretado), para un total de 24 implementaciones. El objetivo es medir su desempe\~no, verificar si el
+comportamiento observado corresponde con la complejidad te\'orica y explicar, a partir de los datos
+obtenidos, las diferencias entre algoritmos, entre tipos de entrada y entre lenguajes.
+
+\paragraph{C\'omo se hizo.} Los datos de prueba se generaron una sola vez con una semilla fija y se guardaron
+en archivos de texto plano; todos los programas los leen desde esos archivos, de modo que cada algoritmo se
+eval\'ua sobre exactamente los mismos valores. Cada medici\'on se repiti\'o cinco veces y se reporta el promedio
+y la desviaci\'on est\'andar. Los resultados se almacenaron en archivos CSV y las gr\'aficas y tablas de este
+documento se construyeron directamente a partir de ellos.
+
+\paragraph{Dos equipos de c\'omputo.} Todo el flujo experimental se ejecut\'o completo en \textbf{dos
+computadores distintos} (equipo A y equipo B), siguiendo el procedimiento de la secci\'on~\ref{sec:metodologia}.
+Cada conjunto de resultados sale de un \'unico equipo, para que sus tiempos sean comparables entre s\'i. Las gr\'aficas de cada punto se presentan para ambos
+equipos, y la secci\'on~\ref{sec:equipos} compara los dos conjuntos de resultados. Que dos m\'aquinas
+independientes lleguen a las mismas conclusiones cualitativas es, adem\'as, una verificaci\'on de que los
+hallazgos no dependen de un equipo en particular.
+
+\paragraph{Estructura del documento.} La secci\'on~\ref{sec:metodologia} describe la metodolog\'ia y las
+condiciones del experimento; las secciones~\ref{sec:p1}, \ref{sec:p2} y~\ref{sec:p3} desarrollan los Puntos~1
+(ordenamiento), 2 (b\'usqueda) y 3 (an\'alisis comparativo) del taller; la secci\'on~\ref{sec:equipos} compara
+los dos equipos; despu\'es se declara el uso de inteligencia artificial y se presentan las conclusiones. Las
+tablas completas de resultados est\'an en el Anexo~\ref{anexo}.
+
+% ================================================================================== METODOLOG\'IA
+\section{Metodolog\'ia y condiciones del experimento}\label{sec:metodologia}
+
+\paragraph{Implementaci\'on.} Las implementaciones de Java y de Python siguen exactamente la misma l\'ogica y
+se adaptaron de los art\'iculos de GeeksforGeeks citados en la Tabla~\ref{tab:fuentes}. Los ordenamientos
+trabajan \emph{en sitio} sobre el arreglo recibido y las b\'usquedas devuelven un \'indice o $-1$. Dos
+adaptaciones merecen mencionarse:
+\begin{itemize}
+  \item \textbf{Dual-Pivot QuickSort:} los pivotes son el primer y el \'ultimo elemento del intervalo (si el
+  primero es mayor, se intercambian), tal como pide el taller. No se usa ninguna estrategia de pivote
+  aleatorio ni de mediana.
+  \item \textbf{Bucket Sort:} se usan $k=n$ cubetas de igual ancho sobre el intervalo $[\min,\max]$ del
+  arreglo. El valor $v$ se asigna a la cubeta $\left\lfloor \dfrac{(v-\min)\cdot k}{\max-\min+1}\right\rfloor$.
+  Las cubetas se almacenan de forma contigua (conteo y suma de prefijos) en lugar de una lista por cubeta, y
+  cada cubeta se ordena con Insertion Sort, como en GeeksforGeeks. Radix Sort es LSD en base 10, con un
+  Counting Sort estable por d\'igito (8 pasadas para n\'umeros de 8 d\'igitos).
+\end{itemize}
+
+\begin{table}[htbp]
+\centering
+\caption{Fuentes (GeeksforGeeks) utilizadas para cada algoritmo.}\label{tab:fuentes}
+{\footnotesize
+\begin{tabular}{ll}
+\toprule
+Algoritmo & Fuente \\
+\midrule
+Insertion Sort & \url{https://www.geeksforgeeks.org/insertion-sort-algorithm/} \\
+Dual-Pivot QuickSort & \url{https://www.geeksforgeeks.org/dual-pivot-quicksort/} \\
+Merge Sort & \url{https://www.geeksforgeeks.org/merge-sort/} \\
+Heap Sort & \url{https://www.geeksforgeeks.org/heap-sort/} \\
+Radix Sort & \url{https://www.geeksforgeeks.org/radix-sort/} \\
+Bucket Sort & \url{https://www.geeksforgeeks.org/bucket-sort-2/} \\
+B\'usqueda lineal & \url{https://www.geeksforgeeks.org/linear-search/} \\
+B\'usqueda binaria & \url{https://www.geeksforgeeks.org/binary-search/} \\
+B\'usqueda ternaria & \url{https://www.geeksforgeeks.org/ternary-search/} \\
+B\'usqueda por saltos & \url{https://www.geeksforgeeks.org/jump-search/} \\
+B\'usqueda por interpolaci\'on & \url{https://www.geeksforgeeks.org/interpolation-search/} \\
+B\'usqueda exponencial & \url{https://www.geeksforgeeks.org/exponential-search/} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Datos de prueba.} Se generaron una sola vez con el programa \code{tools/generate\_data.py} (semilla
+fija 42) y se guardaron en archivos de texto plano, un entero por l\'inea. Para cada tama\~no
+$n\in\{1.000;\,10.000;\,100.000;\,1.000.000\}$ hay un arreglo de enteros aleatorios de 8 d\'igitos (entre
+$10.000.000$ y $99.999.999$), sus versiones ordenadas ascendente y descendentemente, y un archivo de 1.000
+claves de b\'usqueda (500 presentes en el arreglo y 500 ausentes, mezcladas). Los programas leen esos
+archivos antes de medir; la lectura y escritura de archivos nunca entra en el tiempo medido.
+
+\paragraph{Medici\'on del tiempo.} Se mide \'unicamente la ejecuci\'on del algoritmo con
+\code{System.nanoTime()} en Java y \code{time.perf\_counter\_ns()} en Python. Cada medici\'on se repite
+5~veces, \emph{cada una sobre una copia nueva del arreglo original} (la copia no se cronometra, de modo que
+la segunda repetici\'on no ordena un arreglo ya ordenado), y se reportan el promedio y la desviaci\'on
+est\'andar muestral. En Java se ejecuta antes un calentamiento (10~ejecuciones sobre 10.000 elementos por
+algoritmo de ordenamiento y 300~pasadas del conjunto de claves por algoritmo de b\'usqueda) que no entra en el
+promedio. Despu\'es de cada ejecuci\'on, fuera del tiempo medido, se verifica que el arreglo qued\'o ordenado
+(y con la misma suma de elementos) o que cada b\'usqueda devolvi\'o el resultado correcto.
+
+\paragraph{Mediciones de b\'usqueda.} Una sola b\'usqueda dura tan poco que medirla de forma aislada estar\'ia
+dominado por el ruido del reloj. Por eso se busca el conjunto de 1.000 claves en una sola pasada cronometrada y
+se reporta el \emph{tiempo promedio por b\'usqueda}. Para el efecto de la posici\'on de la clave, se busca
+1.000~veces una misma clave ubicada en el \'indice $0$ (inicio), $n/2$ (centro) o $n-1$ (final) del arreglo de
+$n=1.000.000$.
+
+\paragraph{Valores estimados y fallos.} Antes de ejecutar un tama\~no $n$, el programa estima su tiempo
+escalando el \'ultimo promedio medido con el modelo de costo te\'orico del algoritmo:
+\begin{equation}
+  t(n)\;=\;t(n_{\text{prev}})\cdot\frac{f(n)}{f(n_{\text{prev}})},
+  \qquad f(n)\in\{n,\; n\log_2 n,\; n^2\}.\label{eq:estimacion}
+\end{equation}
+Si la estimaci\'on supera 300~s por ejecuci\'on, el algoritmo no se ejecuta y el valor se registra como
+\emph{estimado}. Si un algoritmo falla (desbordamiento de pila en Java, \code{RecursionError} en Python), el
+error se registra sin ocultarlo y los tama\~nos mayores se estiman con el mismo escalamiento. En las gr\'aficas
+de l\'ineas los valores estimados se dibujan con l\'inea punteada y marcador hueco; en las de barras, con barra
+rayada y el prefijo <<$\sim$>>; en las tablas, con <<$\sim$>> y <<(est.)>>. Todas las gr\'aficas usan escala
+logar\'itmica en el eje del tiempo. El registro completo de estimados y fallos de cada equipo est\'a en las
+Tablas~\ref{tab:issuesA} y~\ref{tab:issuesB} del anexo.
+
+\paragraph{Reproducci\'on.} El c\'odigo fuente, los resultados y el programa que genera los datos con semilla fija
+est\'an en \url{https://github.com/Shuh3n/taller3-ordenamiento-busqueda}. Las tablas de este documento se
+generan con \code{tools/make\_latex.py} a partir de \code{results/} (equipo A) y \code{resultsv2/} (equipo B).
+
+\paragraph{Formato de resultados.} Cada fila de los CSV contiene: lenguaje, algoritmo, variante de entrada (o
+escenario de b\'usqueda), $n$, el tiempo de cada una de las cinco repeticiones, promedio, desviaci\'on
+est\'andar, si el valor fue medido o estimado, y el estado de la ejecuci\'on.
+
+\paragraph{Entorno de pruebas.}\label{par:entorno} La Tabla~\ref{tab:entorno} resume los dos equipos. Las
+corridas se hicieron con los benchmarks ejecutados uno tras otro (nunca en paralelo)
+\pendiente{confirmar: equipo conectado a la corriente y sin otras aplicaciones pesadas}.
+
+\begin{table}[htbp]
+\centering
+\caption{Entorno de pruebas de cada equipo.}\label{tab:entorno}
+{\small
+\begin{tabular}{lll}
+\toprule
+ & Equipo A (\code{results/}) & Equipo B (\code{resultsv2/}) \\
+\midrule
+Sistema operativo & macOS 26.6.2 & \pendiente{completar} \\
+Procesador / n\'ucleos & Apple Silicon (arm64) \pendiente{modelo} & \pendiente{completar} \\
+Memoria RAM & \pendiente{completar} & \pendiente{completar} \\
+Java (JIT) & 27.0.1.0.2 & \pendiente{completar} \\
+Python & 3.15.1 & \pendiente{completar} \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+% ============================================================================== PUNTO 1
+\section{Punto 1: algoritmos de ordenamiento}\label{sec:p1}
+
+La Tabla~\ref{tab:complejidad} resume la complejidad te\'orica investigada para cada algoritmo, su estabilidad y
+si trabaja \emph{in-place}.
+
+\begin{table}[htbp]
+\centering
+\caption{Complejidad te\'orica, estabilidad y uso de memoria ($n$ elementos, $d=8$ d\'igitos, $b=10$ base,
+$k$ cubetas). \emph{Estable}: conserva el orden relativo de claves iguales. \emph{In-place}: usa memoria
+auxiliar $O(1)$ (o $O(\log n)$ de pila).}\label{tab:complejidad}
+\resizebox{\linewidth}{!}{\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+Algoritmo & Mejor caso & Caso promedio & Peor caso & Estable & In-place \\
+\midrule
+Insertion Sort & $O(n)$ & $O(n^2)$ & $O(n^2)$ & S\'i & S\'i \\
+Dual-Pivot QuickSort & $O(n\log n)$ & $O(n\log n)$ & $O(n^2)$ & No & S\'i (pila $O(\log n)$ prom.) \\
+Merge Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & S\'i & No ($O(n)$ auxiliar) \\
+Heap Sort & $O(n\log n)$ & $O(n\log n)$ & $O(n\log n)$ & No & S\'i \\
+Radix Sort (LSD, base 10) & $O(d(n+b))$ & $O(d(n+b))$ & $O(d(n+b))$ & S\'i & No ($O(n+b)$ auxiliar) \\
+Bucket Sort & $O(n+k)$ & $O(n+k)$ & $O(n^2)$ & S\'i (con inserci\'on estable) & No ($O(n+k)$ auxiliar) \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Dos observaciones sobre esta tabla, relevantes para lo que sigue. Primero, con pivotes fijos en los
+extremos, el peor caso de Dual-Pivot QuickSort aparece justamente con una entrada ya ordenada: el pivote
+izquierdo es el m\'inimo y el derecho el m\'aximo del intervalo, por lo que cada partici\'on solo descarta dos
+elementos y la recursi\'on llega a una profundidad cercana a $n/2$. Segundo, el peor caso de Bucket Sort ocurre
+cuando casi todos los elementos caen en una misma cubeta, pues entonces el Insertion Sort interno trabaja sobre
+casi todo el arreglo.
+
+% ---------------------------------------------------------------------------- 1.1
+\subsection{Crecimiento del tiempo con $n$}
+
+Las Figuras~\ref{fig:p1growthJava} y~\ref{fig:p1growthPython} muestran el tiempo contra $n$ con entrada
+aleatoria, una l\'inea por algoritmo y escala logar\'itmica en ambos ejes. En una gr\'afica log-log, un
+algoritmo $O(n^2)$ se ve como una recta de pendiente $\approx2$ y uno $O(n)$ u $O(n\log n)$ como una recta de
+pendiente $\approx1$.
+
+\figpair{p1_growth_java}{0.82}{Ordenamiento en Java, entrada aleatoria (log-log). Medido: l\'inea continua;
+estimado: l\'inea punteada y marcador hueco.}{fig:p1growthJava}
+\figpair{p1_growth_python}{0.82}{Ordenamiento en Python, entrada aleatoria (log-log). En Python, Insertion Sort
+con $n=1.000.000$ es un valor estimado.}{fig:p1growthPython}
+
+La Tabla~\ref{tab:growth} muestra, para cada algoritmo, \emph{cu\'antas veces aument\'o el tiempo medio al
+multiplicar $n$ por 10}, junto al factor que predice la complejidad te\'orica: $\times100$ para $O(n^2)$,
+$\times10$ para $O(n)$ y $\times13{,}3$, $\times12{,}5$ y $\times12$ para $O(n\log n)$ en cada uno de los tres
+saltos.
+
+\begin{table}[htbp]
+\centering
+\caption{Factor de crecimiento del tiempo medio al multiplicar $n$ por 10 (entrada aleatoria) frente al factor
+que predice la complejidad te\'orica. <<$\sim$>> indica que alguno de los extremos es estimado.}\label{tab:growth}
+\textbf{Equipo A}\par\smallskip
+\input{tables/growth_A.tex}
+\textbf{Equipo B}\par\smallskip
+\input{tables/growth_B.tex}
+\end{table}
+
+\Needspace{9\baselineskip}\paragraph{An\'alisis.}
+\begin{itemize}
+  \item \textbf{Insertion Sort} es el \'unico algoritmo cuadr\'atico y se nota: en Java, el tiempo crece
+  $\times102$ y $\times103$ en los dos \'ultimos saltos del equipo~A (te\'orico $\times100$), y $\times107$ y
+  $\times149$ en el equipo~B. Con $n=1.000.000$ tarda 36,7~s en A y 55,3~s en B, frente a 51,7~ms y 76,9~ms de
+  Dual-Pivot QuickSort: ordena el mismo arreglo 700 veces m\'as lento. El $\times149$ del equipo~B (mayor que
+  100) y los $\times113$ y $\times136$ que se miden en Python entre $10^4$ y $10^5$ sugieren que, al crecer el
+  arreglo, aparece un costo adicional por jerarqu\'ia de memoria (el arreglo de $10^6$ enteros deja de caber en
+  las cach\'es m\'as r\'apidas); es una explicaci\'on plausible, no la verificamos con un perfilador.
+  \item \textbf{Merge Sort, Heap Sort y Dual-Pivot QuickSort} (todos $O(n\log n)$ sobre datos aleatorios)
+  crecen $\times11$ a $\times13$ por cada salto de 10 en Java a partir de $n=10.000$, muy cerca del factor
+  te\'orico de $\times12$ a $\times12{,}5$. En Python los factores son algo mayores ($\times12$ a
+  $\times15{,}6$). Que el factor medido
+  est\'e ligeramente por encima de $\times12$ es esperable: la complejidad te\'orica cuenta operaciones, no
+  accesos a memoria, y con arreglos grandes los accesos pierden localidad.
+  \item \textbf{Radix Sort y Bucket Sort} deber\'ian crecer $\times10$ ($O(d(n+b))$ con $d=8$ fijo y $O(n+k)$
+  con $k=n$). En Java el factor es $\times9{,}4$ a $\times9{,}6$ para Radix Sort en el equipo~A, y $\times10{,}9$
+  en B. Bucket Sort es el m\'as irregular ($\times4{,}6$ a $\times17{,}4$): sus accesos a memoria son
+  dispersos (cada elemento se escribe en la posici\'on de su cubeta), por lo que su costo por elemento depende
+  mucho de si el arreglo cabe en cach\'e. En Python ambos superan $\times10$ en el \'ultimo salto
+  ($\times14{,}6$ a $\times19{,}3$), con el mismo tipo de explicaci\'on: una lista de $10^6$ enteros de Python
+  son $10^6$ objetos dispersos en memoria, y las escrituras dispersas fallan m\'as en cach\'e.
+  \item \textbf{Efecto de $n$ peque\~no.} Los saltos $1.000\to10.000$ de Java se desv\'ian m\'as: Heap Sort
+  muestra $\times2{,}7$ en el equipo~A cuando la teor\'ia pide $\times13{,}3$. La causa m\'as probable es que
+  la medici\'on de $n=1.000$ (unas decenas de microsegundos) a\'un incluye costos del JIT que el calentamiento
+  de 10~ejecuciones no alcanz\'o a absorber: ese primer valor es demasiado alto y el factor sale artificialmente
+  bajo.
+\end{itemize}
+
+\paragraph{C\'omo se estimaron los casos que no terminaron.} Se us\'o la Ecuaci\'on~\eqref{eq:estimacion}.
+Hubo dos grupos (listados en las Tablas~\ref{tab:issuesA} y~\ref{tab:issuesB}):
+\begin{enumerate}
+  \item \emph{Python, Insertion Sort con $n=1.000.000$} (entrada aleatoria y descendente): se escal\'o con
+  $f(n)=n^2$ desde $n=100.000$ ($\times100$). Resultan $\sim$6.890~s ($\approx1{,}9$~h) y $\sim$12.400~s
+  ($\approx3{,}4$~h) en el equipo~A, y $\sim$13.700~s ($\approx3{,}8$~h) y $\sim$22.100~s ($\approx6{,}1$~h)
+  en el B; todos superan el l\'imite de 5~minutos. Como en las medidas reales de Python el salto
+  $10^4\to10^5$ fue $\times113$ (A) y $\times136$ (B), y no exactamente $\times100$, estas estimaciones deben
+  leerse como una \emph{cota inferior}.
+  \item \emph{Dual-Pivot QuickSort con entrada ascendente o descendente}: el algoritmo fall\'o (Java:
+  \code{Stack\-Overflow\-Error} con $n=100.000$; Python: \code{Recursion\-Error} con $n=10.000$, l\'imite
+  de recursi\'on 1.000), por lo que los tama\~nos mayores se estimaron con $f(n)=n^2$ desde el \'ultimo tama\~no
+  que s\'i termin\'o. La validez de ese modelo se puede comprobar en Java, donde $n=1.000\to10.000$ s\'i se
+  midi\'o: el tiempo creci\'o $\times106$ en A y $\times92$ en B, es decir, cuadr\'aticamente.
+\end{enumerate}
+
+% ---------------------------------------------------------------------------- 1.2
+\subsection{Efecto del orden de entrada (lenguaje compilado: Java)}
+
+Las Figuras~\ref{fig:p1order1k}, \ref{fig:p1order10k} y~\ref{fig:p1order100k} comparan, para
+$n=1.000$, $10.000$ y $100.000$, los tres tipos de entrada (aleatoria, ascendente y descendente) en Java. Las
+barras rayadas son valores estimados; sobre cada barra se muestra su tiempo.
+
+\figpair{p1_order_1000}{0.92}{Efecto del orden de entrada en Java, $n=1.000$.}{fig:p1order1k}
+\figpair{p1_order_10000}{0.92}{Efecto del orden de entrada en Java, $n=10.000$.}{fig:p1order10k}
+\figpair{p1_order_100000}{0.92}{Efecto del orden de entrada en Java, $n=100.000$. Las barras rayadas de
+Dual-Pivot QuickSort son estimadas: el algoritmo fall\'o con \code{StackOverflowError}.}{fig:p1order100k}
+
+\Needspace{9\baselineskip}\paragraph{An\'alisis.}
+\begin{itemize}
+  \item \textbf{Insertion Sort cambi\'o radicalmente.} Con entrada ascendente es su mejor caso, $O(n)$: cada
+  elemento ya est\'a en su lugar y el ciclo interno no desplaza nada. Con $n=100.000$ tard\'o 53,1~$\mu$s frente
+  a 361~ms con entrada aleatoria en el equipo~A (casi 6.800 veces menos), y 76,6~$\mu$s frente a 372~ms en el
+  B. Con entrada descendente es su peor caso, $O(n^2)$ completo: cada elemento debe recorrer todos los anteriores
+  y tarda $\approx1{,}8$ a $2{,}1$ veces m\'as que con datos aleatorios (en promedio, con datos aleatorios cada
+  elemento solo se desplaza la mitad del camino).
+  \item \textbf{Dual-Pivot QuickSort fue el m\'as afectado, y en sentido contrario.} Con la entrada ya ordenada
+  (en cualquier direcci\'on) los pivotes extremos son el m\'inimo y el m\'aximo, la partici\'on queda
+  totalmente desbalanceada y el algoritmo degenera a $O(n^2)$: con $n=1.000$ ya es unas 3~veces m\'as lento que
+  con datos aleatorios, con $n=10.000$ es $\times35$ (A) y $\times27$ (B), y con $n=100.000$ la profundidad
+  de recursi\'on ($\approx n/2=50.000$ llamadas) agot\'o la pila de Java con un \code{StackOverflowError}. Los
+  tiempos de $n=100.000$ de las barras rayadas son estimados con $f(n)=n^2$ ($\sim$1,46~s en A y $\sim$1,64~s
+  en B frente a 4,67~ms y 6,61~ms con entrada aleatoria, unas 250 a 310 veces m\'as). Es la raz\'on por la que
+  las implementaciones reales eligen el pivote al azar, por mediana de tres o por muestreo.
+  \item \textbf{Merge Sort, Heap Sort y Bucket Sort mejoraron moderadamente con entrada ordenada}
+  (aproximadamente entre 0,3 y 0,65 veces el tiempo de la entrada aleatoria; la excepci\'on es Heap Sort con
+  $n=1.000$ en A, $\approx0{,}16$, afectado por el calentamiento). Su complejidad no cambia ---Merge
+  Sort y Heap Sort siempre hacen $\Theta(n\log n)$ operaciones---, pero con datos ordenados las comparaciones
+  son muy predecibles (en la mezcla siempre sale primero un mismo lado, el procesador acierta las
+  ramificaciones) y los accesos a memoria son m\'as secuenciales. En Bucket Sort, un arreglo ordenado asigna
+  los elementos a cubetas consecutivas, lo que vuelve secuencial la escritura que con datos aleatorios es
+  dispersa. Son efectos de constantes, no de complejidad.
+  \item \textbf{Radix Sort fue el \'unico insensible al orden} (cociente entre 0,65 y 1,29 en todos los
+  tama\~nos): siempre hace las mismas 8 pasadas de Counting Sort sobre los d\'igitos, y el costo de cada pasada
+  no depende de c\'omo est\'en ordenados los valores, porque nunca compara dos elementos entre s\'i.
+  \item \textbf{Peor comportamiento.} Entre los algoritmos que terminaron, el peor tiempo absoluto fue
+  Insertion Sort con entrada descendente ($n=1.000.000$: 73,8~s en A y 93,2~s en B). Entre los que \emph{no}
+  terminaron, el peor comportamiento fue Dual-Pivot QuickSort con entrada ya ordenada: lo provoc\'o la
+  combinaci\'on de pivotes en los extremos (partici\'on de tama\~no $n-2$, recursi\'on de profundidad
+  $\approx n/2$). El mismo patr\'on aparece en Python, pero antes: el l\'imite de recursi\'on de 1.000 hace
+  fallar el algoritmo con $n=10.000$.
+\end{itemize}
+
+% ---------------------------------------------------------------------------- 1.3
+\subsection{Compilado frente a interpretado}
+
+La Figura~\ref{fig:p1compiled} compara Java y Python con $n=1.000.000$ y entrada aleatoria, con dos barras por
+algoritmo (una por lenguaje).
+
+\figpair{p1_compiled}{0.92}{Java frente a Python, $n=1.000.000$, entrada aleatoria. La barra de Python de
+Insertion Sort es un valor estimado.}{fig:p1compiled}
+
+\Needspace{9\baselineskip}\paragraph{An\'alisis.} Java fue m\'as r\'apido en todos los algoritmos, pero por factores muy distintos
+(cociente Python/Java en el equipo~A, y entre par\'entesis en el B): Dual-Pivot QuickSort $\times12$ ($\times14$),
+Merge Sort $\times13$ ($\times14$), Heap Sort $\times23$ ($\times24$), Bucket Sort $\times54$ ($\times26$),
+Radix Sort $\times74$ ($\times38$) e Insertion Sort $\sim\times188$ ($\sim\times248$, con la barra de Python
+estimada).
+\begin{itemize}
+  \item \textbf{Compilaci\'on JIT frente a interpretaci\'on.} El JIT de Java traduce los m\'etodos calientes a
+  c\'odigo de m\'aquina y los optimiza; Python ejecuta cada operaci\'on como instrucciones de bytecode que el
+  int\'erprete despacha una a una, con comprobaci\'on de tipos en cada operaci\'on.
+  \item \textbf{Representaci\'on de los datos.} En Java, \code{int[]} es un bloque contiguo de enteros de 4
+  bytes. En Python, una lista guarda \emph{referencias} a objetos \code{int} dispersos por el mont\'on: leer un
+  elemento es seguir un puntero, lo que cuesta m\'as y aprovecha peor la cach\'e.
+  \item \textbf{Por qu\'e la brecha es mayor en unos algoritmos.} Es mayor donde el trabajo es una cantidad
+  enorme de iteraciones simples sin ramificaciones impredecibles: Insertion Sort (ciclo interno con un
+  desplazamiento por iteraci\'on), Radix Sort (8 pasadas $\times$ 3 ciclos sobre $10^6$ elementos) y Bucket Sort.
+  En Java esos ciclos corren casi a la velocidad de la memoria; en Python cada iteraci\'on cuesta decenas de
+  nanosegundos de despacho de bytecode. Es menor en Dual-Pivot QuickSort y Merge Sort: ah\'i parte del tiempo en
+  Java se va en costos que no desaparecen en Python (fallos de predicci\'on de ramificaciones en las
+  comparaciones, recursi\'on) y en Python algunas operaciones se resuelven en C (en la mezcla, las copias con
+  \emph{slicing}), de manera que la distancia relativa se reduce. Esta es nuestra interpretaci\'on de los
+  datos; no la medimos de forma aislada.
+\end{itemize}
+
+% ============================================================================== PUNTO 2
+\section{Punto 2: algoritmos de b\'usqueda}\label{sec:p2}
+
+\begin{table}[htbp]
+\centering
+\caption{Complejidad te\'orica de los algoritmos de b\'usqueda sobre un arreglo ordenado de $n$ elementos.}\label{tab:busqueda}
+\resizebox{\linewidth}{!}{\footnotesize
+\begin{tabular}{llll}
+\toprule
+Algoritmo & Mejor caso & Peor caso / promedio & Supuesto \\
+\midrule
+Lineal & $O(1)$ & $O(n)$ & Ninguno (no requiere orden) \\
+Binaria & $O(1)$ & $O(\log_2 n)$ & Arreglo ordenado \\
+Ternaria & $O(1)$ & $O(\log_3 n)$ iteraciones (2 comparaciones c/u) & Arreglo ordenado \\
+Por saltos & $O(1)$ & $O(\sqrt n)$ & Arreglo ordenado \\
+Interpolaci\'on & $O(1)$ & promedio $O(\log\log n)$; peor caso $O(n)$ & Ordenado y distribuci\'on uniforme \\
+Exponencial & $O(1)$ & $O(\log i)$, $i$ = posici\'on de la clave & Arreglo ordenado \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+Los arreglos de entrada son los ordenados ascendentemente del Punto~1. Cada medici\'on busca el conjunto de
+1.000 claves (500 presentes y 500 ausentes), cronometra el total y reporta el promedio por b\'usqueda.
+
+% ---------------------------------------------------------------------------- 2.1
+\subsection{Crecimiento del tiempo con $n$}
+
+\figpair{p2_growth_java}{0.82}{Tiempo promedio por b\'usqueda frente a $n$ en Java (log-log).}{fig:p2growthJava}
+\figpair{p2_growth_python}{0.82}{Tiempo promedio por b\'usqueda frente a $n$ en Python (log-log).}{fig:p2growthPython}
+
+\begin{table}[htbp]
+\centering
+\caption{Factor de crecimiento del tiempo promedio por b\'usqueda al multiplicar $n$ por 10, frente al factor
+te\'orico ($\times10$ lineal; $\times1{,}33$, $\times1{,}25$, $\times1{,}2$ logar\'itmico; $\times3{,}16$ para
+$O(\sqrt n)$; $\times1{,}13$, $\times1{,}09$, $\times1{,}06$ para $O(\log\log n)$).}\label{tab:searchgrowth}
+\textbf{Equipo A}\par\smallskip
+\input{tables/search_growth_A.tex}
+\textbf{Equipo B}\par\smallskip
+\input{tables/search_growth_B.tex}
+\end{table}
+
+\Needspace{9\baselineskip}\paragraph{An\'alisis.}
+\begin{itemize}
+  \item \textbf{B\'usqueda lineal ($O(n)$).} Es la \'unica que crece como una recta de pendiente 1 en la gr\'afica
+  log-log: el factor medido es $\times9$ a $\times13$ por salto frente al $\times10$ te\'orico. Por eso sirve
+  como \emph{referencia}: no hace ning\'un supuesto sobre los datos, es la cota superior contra la que se mide
+  cu\'anto ahorra aprovechar el orden. Con $n=1.000.000$ tarda 134~$\mu$s por b\'usqueda en Java (A) y 7,74~ms
+  en Python (A); las dem\'as van de 70~ns a 635~ns en Java (A).
+  \item \textbf{B\'usqueda por saltos ($O(\sqrt n)$).} Crece $\approx\times3$ por cada $\times10$ en $n$
+  ($\times3{,}04$ y $\times3{,}19$ en Java, $\times3{,}37$ y $\times2{,}84$ en Python, en el \'ultimo salto),
+  coincidiendo con el $\sqrt{10}=3{,}16$ te\'orico. Es mucho m\'as r\'apida que la lineal, pero queda entre
+  entre 5 y 26 veces por detr\'as de las logar\'itmicas con $n=10^6$ (635~ns frente a 135~ns de la binaria en
+  Java A; 33~$\mu$s frente a 1,26~$\mu$s en Python A).
+  \item \textbf{Binaria, ternaria y exponencial ($O(\log n)$).} Casi no crecen: por cada $\times10$ en $n$
+  el tiempo se multiplica por $\approx1{,}2$ a $1{,}8$ (con alg\'un valor aislado entre $\times0{,}8$ y
+  $\times2{,}2$), cerca del $\times1{,}2$ a $\times1{,}33$ que predice $\log_2 n$ (de 10 a 20 iteraciones). Las desviaciones vienen de que son tiempos de decenas de nanosegundos,
+  donde el ruido pesa, y de que al crecer el arreglo los \'ultimos accesos de cada b\'usqueda caen m\'as
+  lejos en memoria. La ternaria hace $\log_3 n$ iteraciones pero con dos comparaciones cada una
+  ($2\log_3 n\approx1{,}26\log_2 n$ comparaciones), as\'i que no gana a la binaria en comparaciones; en la
+  pr\'actica quedaron empatadas dentro del ruido (en Python la ternaria es algo m\'as r\'apida porque ejecuta
+  menos iteraciones del ciclo interpretado).
+  \item \textbf{Interpolaci\'on ($O(\log\log n)$ promedio).} Fue la m\'as r\'apida con $n=10^6$ en los dos
+  lenguajes y los dos equipos (70~ns y 110~ns en Java; 554~ns y 981~ns en Python), porque los datos son
+  uniformes: estima la posici\'on y casi siempre acierta en pocos intentos. Su ventaja es modesta frente a la
+  binaria (unas 2 veces) porque $\log\log n$ y $\log n$ ya son valores peque\~nos con $n=10^6$ ($\approx4{,}3$
+  frente a $\approx20$); su factor de crecimiento ($\times1{,}0$ a $\times1{,}7$) no se distingue del de las
+  logar\'itmicas dentro del ruido de medici\'on. Con datos no uniformes se degradar\'ia hacia $O(n)$.
+  \item \textbf{A partir de qu\'e $n$ se nota la diferencia con la lineal.} En Python ya con $n=1.000$ la
+  lineal es unas 12 veces m\'as lenta que la binaria (5,76~$\mu$s frente a 0,47~$\mu$s en A); en Java, con
+  $n=1.000$ la diferencia es de solo 2,5 veces (116~ns frente a 47~ns), con $n=10.000$ ya son 11 veces y con
+  $n=1.000.000$ son unas 1.000 veces (134~$\mu$s frente a 135~ns).
+\end{itemize}
+
+% ---------------------------------------------------------------------------- 2.2
+\subsection{Compilado frente a interpretado}
+
+\figpair{p2_compiled}{0.92}{Java frente a Python en b\'usqueda, $n=1.000.000$ (tiempo promedio por
+b\'usqueda).}{fig:p2compiled}
+
+\Needspace{9\baselineskip}\paragraph{An\'alisis.} El cociente Python/Java con $n=1.000.000$ es de $\times8$ a $\times10$ para las
+b\'usquedas logar\'itmicas y de interpolaci\'on (binaria $\times9{,}3$, ternaria $\times8{,}4$, interpolaci\'on
+$\times7{,}9$, exponencial $\times9{,}5$ en el equipo~A; $\times9{,}1$, $\times8{,}5$, $\times8{,}9$ y
+$\times10{,}5$ en el B), pero de $\times52$ a $\times100$ para las que recorren muchos elementos: lineal
+($\times57{,}7$ en A, $\times99{,}9$ en B) y por saltos ($\times52$ en A, $\times67{,}6$ en B). La raz\'on es la
+misma del ordenamiento: cuando una b\'usqueda solo ejecuta $\approx20$ iteraciones, una parte importante del
+tiempo en Java son esperas de memoria (cada sondeo cae lejos del anterior en un arreglo de 4~MB), un costo que
+Python paga igual; solo se multiplica el costo de ejecutar las instrucciones, y la brecha se comprime. Cuando
+hay $10^5$ o $10^6$ iteraciones consecutivas, la diferencia de costo \emph{por iteraci\'on} (c\'odigo de
+m\'aquina frente a bytecode) se acumula casi por completo, y el ciclo lineal de Java, muy simple y sobre
+memoria contigua, es adem\'as f\'acil de optimizar para el compilador. Es una interpretaci\'on de los datos; no
+la medimos de forma aislada.
+
+% ---------------------------------------------------------------------------- 2.3
+\subsection{Posici\'on de la clave}
+
+Las Tablas~\ref{tab:posJavaA}--\ref{tab:posPythonB} muestran el tiempo promedio por b\'usqueda cuando la misma
+clave est\'a al inicio (\'indice 0), en el centro (\'indice $n/2$) y al final (\'indice $n-1$) del arreglo de
+$n=1.000.000$, para cada equipo y lenguaje.
+
+\begin{table}[htbp]
+\centering
+\caption{Equipo A, Java: tiempo promedio por b\'usqueda seg\'un la posici\'on de la clave ($n=1.000.000$).}\label{tab:posJavaA}
+\input{tables/pos_A_java.tex}
+\end{table}
+\begin{table}[htbp]
+\centering
+\caption{Equipo A, Python: tiempo promedio por b\'usqueda seg\'un la posici\'on de la clave ($n=1.000.000$).}\label{tab:posPythonA}
+\input{tables/pos_A_python.tex}
+\end{table}
+\begin{table}[htbp]
+\centering
+\caption{Equipo B, Java: tiempo promedio por b\'usqueda seg\'un la posici\'on de la clave ($n=1.000.000$).}\label{tab:posJavaB}
+\input{tables/pos_B_java.tex}
+\end{table}
+\begin{table}[htbp]
+\centering
+\caption{Equipo B, Python: tiempo promedio por b\'usqueda seg\'un la posici\'on de la clave ($n=1.000.000$).}\label{tab:posPythonB}
+\input{tables/pos_B_python.tex}
+\end{table}
+
+\Needspace{9\baselineskip}\paragraph{An\'alisis.} El patr\'on es el mismo en los dos lenguajes y en los dos equipos:
+\begin{itemize}
+  \item \textbf{Cambia mucho en la lineal y en la de saltos.} Ambas recorren el arreglo desde el inicio, as\'i
+  que su costo es proporcional a cu\'anto hay que avanzar. La lineal con la clave al inicio hace una sola
+  comparaci\'on ($\approx1$~ns en Java, 67~ns en Python, que es b\'asicamente el costo de la llamada); en el
+  centro revisa $n/2$ elementos (72,6~$\mu$s en Java A) y al final los $n$ (156~$\mu$s), de modo que el centro
+  cuesta casi la mitad que el final. La de saltos con la clave al inicio la encuentra en el primer bloque
+  (3~ns); en el centro da $\approx500$ saltos de $\sqrt n=1.000$ posiciones (300~ns), y al final da $\approx1.000$
+  saltos y luego recorre un bloque completo (1,21~$\mu$s), por lo que final/centro es $\approx4$ y no 2.
+  \item \textbf{Casi no cambia en la binaria y la ternaria.} Ambas siempre parten el intervalo, sin importar
+  d\'onde est\'e la clave, y necesitan $\approx\log n$ pasos en cualquier posici\'on (22, 21 y 23~ns en Java A
+  para la binaria). Un detalle: con $n=10^6$, el primer punto medio de la binaria es el \'indice $499.999$, y
+  la clave <<centro>> est\'a en el \'indice $500.000$, as\'i que \emph{no} se encuentra en el primer intento y
+  ese caso cuesta lo mismo que los otros dos; el mejor caso $O(1)$ de la binaria habr\'ia requerido ubicar la
+  clave exactamente en el punto medio. Adem\'as, como se busca la misma clave 1.000 veces seguidas, el
+  predictor de ramificaciones y la cach\'e se <<aprenden>> el recorrido, lo que hace estos tiempos algo
+  menores que con claves variadas.
+  \item \textbf{Interpolaci\'on: depende poco, pero no es constante.} Con la clave al inicio o al final la
+  f\'ormula de interpolaci\'on cae exactamente en el extremo (3~ns); en el centro la estimaci\'on cae cerca pero
+  no exactamente, por lo que son necesarias algunas iteraciones m\'as (7~ns en Java A; 312~ns frente a 108 y
+  125~ns en Python A).
+  \item \textbf{Exponencial: crece con el logaritmo de la posici\'on.} Si la clave est\'a en el \'indice 0 se
+  detecta de inmediato; en el centro o al final debe duplicar el \'indice $\approx\log_2 i$ veces y luego hacer
+  una b\'usqueda binaria en el \'ultimo intervalo, por eso el centro y el final cuestan casi lo mismo entre s\'i
+  (1,03 y 1,20~$\mu$s en Python A). En Java, el valor <<inicio>> (27~ns en A, 42~ns en B) es mucho mayor que el
+  $\approx1$~ns que se esperar\'ia de una salida inmediata; una hip\'otesis es que en el calentamiento el JIT
+  nunca vio ejecutarse esa salida temprana y, la primera vez, tuvo que \emph{desoptimizar} y recompilar el
+  m\'etodo, costo que al promediar sobre 1.000 b\'usquedas se nota. No lo comprobamos.
+\end{itemize}
+
+% ============================================================================== PUNTO 3
+\section{Punto 3: an\'alisis comparativo}\label{sec:p3}
+
+\subsection{Comparativos frente a no comparativos}
+
+\paragraph{L\'imite inferior te\'orico.} Cualquier algoritmo de ordenamiento que solo obtiene informaci\'on del
+orden relativo comparando pares de elementos puede modelarse como un \'arbol de decisi\'on binario: cada hoja
+es una de las $n!$ permutaciones posibles de la entrada, y cada comparaci\'on es un nodo interno con dos
+resultados. Un \'arbol binario con $n!$ hojas tiene altura al menos $\log_2(n!)$, y por la aproximaci\'on de
+Stirling $\log_2(n!)=n\log_2 n-n\log_2 e+O(\log n)=\Theta(n\log n)$. Por tanto, \textbf{ning\'un ordenamiento por
+comparaciones puede hacerlo en menos de $\Omega(n\log n)$ comparaciones en el peor caso}~\cite{clrs}. Con
+$n=10^6$ eso significa al menos $\approx1{,}85\times10^7$ comparaciones.
+
+\paragraph{Por qu\'e Radix Sort y Bucket Sort no est\'an sujetos a \'el.} El argumento anterior supone que la
+\'unica operaci\'on que distingue elementos es la comparaci\'on. Radix Sort y Bucket Sort \emph{nunca comparan
+dos elementos entre s\'i}: Radix extrae un d\'igito y lo usa como \'indice de un arreglo de conteo; Bucket
+calcula la cubeta de un valor con una f\'ormula aritm\'etica sobre el propio valor. Es informaci\'on adicional
+sobre los datos (que son enteros de rango acotado o de distribuci\'on conocida) y, a cambio, ordenan en tiempo
+$O(d(n+b))$ y $O(n+k)$ respectivamente, es decir, lineal en $n$.
+
+\begin{table}[htbp]
+\centering
+\caption{Tiempos de ordenamiento con $n=1.000.000$ (entrada aleatoria). Promedio $\pm$ desviaci\'on est\'andar.}\label{tab:q1}
+\textbf{Equipo A}\par\smallskip
+\input{tables/q1_A.tex}\medskip
+\textbf{Equipo B}\par\smallskip
+\input{tables/q1_B.tex}
+\end{table}
+
+\paragraph{Comparaci\'on de tiempos.} En Java, Bucket Sort y Radix Sort fueron los dos m\'as r\'apidos en ambos
+equipos: Bucket Sort tard\'o 9,08~ms (A) y 32,5~ms (B), unas 5,7 y 2,4 veces menos que el mejor de los
+comparativos (Dual-Pivot QuickSort: 51,7~ms y 76,9~ms); Radix Sort, 18,2~ms y 50,2~ms (2,8 y 1,5 veces menos).
+Merge Sort y Heap Sort, los m\'as lentos entre los $O(n\log n)$, tardaron entre 78~ms y 129~ms. En
+Python la ventaja se reduce: Bucket Sort sigue siendo el mejor (0,486~s en A y 0,833~s en B), pero solo 1,3
+veces m\'as r\'apido que Dual-Pivot QuickSort, y Radix Sort (1,34~s y 1,89~s) es \emph{m\'as lento} que Dual-Pivot
+QuickSort y Merge Sort (aunque m\'as r\'apido que Heap Sort). La explicaci\'on es que Radix Sort hace
+$d=8$ pasadas completas con tres ciclos cada una, y en un lenguaje interpretado el n\'umero de operaciones
+elementales pesa m\'as que la ventaja asint\'otica ($8$ pasadas frente a $\log_2 10^6\approx20$ niveles): la
+ventaja te\'orica de ser lineal solo se materializa si las operaciones son baratas, como en Java.
+
+\paragraph{Supuesto de cada algoritmo y qu\'e pasar\'ia si no se cumple.}
+\begin{itemize}
+  \item \textbf{Radix Sort} supone claves enteras (o representables como cadenas de d\'igitos) con una
+  cantidad \emph{fija y peque\~na} $d$ de d\'igitos; su costo es $O(d(n+b))$. En este taller $d=8$. Con n\'umeros
+  de 16 d\'igitos se necesitar\'ian 16 pasadas, es decir, el tiempo \emph{se duplicar\'ia} en el mejor de los
+  casos: a partir de nuestras mediciones, unos 36~ms en lugar de 18~ms en Java (A) y 1,34~s $\to\sim$2,7~s en
+  Python (A), \textbf{estimaciones}, no mediciones. Adem\'as, 16 d\'igitos no caben en un \code{int} de Java (hay
+  que usar \code{long}). Si $d$ creciera hasta $\sim\log n$ (por ejemplo, enteros de 64 bits), Radix Sort perder\'ia
+  su ventaja sobre los comparativos.
+  \item \textbf{Bucket Sort} supone que los valores est\'an distribuidos \emph{aproximadamente de manera
+  uniforme} en el intervalo $[\min,\max]$, de modo que cada cubeta recibe $\approx1$ elemento. Si los valores
+  se concentran (por ejemplo, casi todos cerca del m\'inimo y unos pocos valores extremos), la mayor\'ia cae en
+  una o pocas cubetas, y el Insertion Sort interno trabaja sobre casi todo el arreglo: el costo pasa de $O(n)$ a
+  $O(n^2)$. Con nuestras mediciones se puede estimar la magnitud: Insertion Sort sobre $10^6$ elementos aleatorios
+  tarda 36,7~s en Java (A), frente a 9,08~ms del Bucket Sort con datos uniformes, es decir, alrededor de
+  \textbf{4.000 veces m\'as} en el peor caso (estimaci\'on).
+\end{itemize}
+
+\subsection{\textquestiondown Ordenar o no ordenar?}\label{sec:q2}
+
+Se tiene un arreglo \emph{desordenado} de 1.000.000 de elementos sobre el que se deben hacer $k$ b\'usquedas.
+Hay dos estrategias: (A) $k$ b\'usquedas lineales, con costo $k\cdot t_{\text{lineal}}$; (B) ordenar una vez con el
+mejor algoritmo medido y luego hacer $k$ b\'usquedas binarias, con costo $T_{\text{orden}}+k\cdot
+t_{\text{binaria}}$. Ordenar conviene cuando
+\begin{equation}
+  T_{\text{orden}}+k\,t_{\text{binaria}}\;<\;k\,t_{\text{lineal}}
+  \quad\Longleftrightarrow\quad
+  k\;>\;k^*=\frac{T_{\text{orden}}}{t_{\text{lineal}}-t_{\text{binaria}}}.\label{eq:kstar}
+\end{equation}
+Como $T_{\text{orden}}$ se toma de ordenar un arreglo aleatorio de $10^6$ elementos, $t_{\text{lineal}}$ y
+$t_{\text{binaria}}$ son los tiempos promedio por b\'usqueda medidos con $n=1.000.000$ (Punto~2). La b\'usqueda
+lineal no aprovecha el orden, por lo que su costo por b\'usqueda es el mismo en el arreglo desordenado que en el
+ordenado. El mejor algoritmo de ordenamiento medido fue, en los dos lenguajes y los dos equipos, \textbf{Bucket
+Sort}.
+
+\begin{table}[htbp]
+\centering
+\caption{C\'alculo del umbral $k^*$ con $n=1.000.000$.}\label{tab:q2}
+\input{tables/q2.tex}
+\end{table}
+
+\paragraph{C\'alculo (ecuaci\'on~\eqref{eq:kstar}).}
+\begin{align*}
+  \text{Java, A:}\quad & k^*=\frac{9{,}08\text{ ms}}{134{,}2\ \mu\text{s}-0{,}135\ \mu\text{s}}=\frac{9{,}08\times10^{-3}}{1{,}341\times10^{-4}}\approx67{,}7
+    \;\Rightarrow\; k\ge68,\\
+  \text{Python, A:}\quad & k^*=\frac{0{,}486\text{ s}}{7{,}74\text{ ms}-1{,}26\ \mu\text{s}}\approx62{,}8
+    \;\Rightarrow\; k\ge63,\\
+  \text{Java, B:}\quad & k^*=\frac{32{,}5\text{ ms}}{144{,}0\ \mu\text{s}-0{,}229\ \mu\text{s}}\approx226{,}1
+    \;\Rightarrow\; k\ge227,\\
+  \text{Python, B:}\quad & k^*=\frac{0{,}833\text{ s}}{14{,}4\text{ ms}-2{,}08\ \mu\text{s}}\approx57{,}9
+    \;\Rightarrow\; k\ge58.
+\end{align*}
+
+\figpair{p3_q2}{0.82}{Costo total de cada estrategia seg\'un $k$ ($n=1.000.000$). Las l\'ineas verticales
+punteadas marcan $k^*$.}{fig:q2}
+
+\paragraph{Interpretaci\'on.} $k^*$ responde cu\'antas b\'usquedas hacen falta para que el costo \'unico de ordenar
+se <<pague>>. Con menos de $k^*$ b\'usquedas (por ejemplo $k=1$, cuando ordenar costar\'ia 9~ms frente a 134~$\mu$s
+de buscar linealmente en Java A), conviene la b\'usqueda lineal; con m\'as, conviene ordenar. A partir de $k^*$
+la diferencia crece r\'apido: con $k=10^6$, la estrategia~A tarda $\approx134$~s en Java (A) y la B $\approx0{,}14$~s.
+Los umbrales son del mismo orden de magnitud (decenas a pocos cientos) y por una raz\'on simple: ordenar con
+Bucket Sort equivale, en tiempo, a unas 60--230 b\'usquedas lineales.
+\begin{itemize}
+  \item \textbf{Por qu\'e difiere entre lenguajes y equipos.} En Python, tanto ordenar como buscar linealmente son
+  ciclos interpretados con costos similares por elemento, y el cociente $T_{\text{orden}}/t_{\text{lineal}}$ es
+  estable (63 y 58 en los dos equipos). En Java, la b\'usqueda lineal es un ciclo simple sobre memoria contigua
+  (muy r\'apido, $\approx0{,}2$~ns por elemento revisado) mientras que Bucket Sort hace escrituras dispersas; en el equipo~A
+  ordenar equivale a 68 b\'usquedas lineales y en el B a 227, porque Bucket Sort empeor\'o mucho m\'as al pasar de A a
+  B ($\times3{,}6$ en tiempo) que la b\'usqueda lineal ($\times1{,}07$): una pasada secuencial no depende tanto de
+  la jerarqu\'ia de memoria como una escritura dispersa.
+  \item \textbf{Salvedades.} (i) Los valores de $k^*$ usan el tiempo medio por b\'usqueda del conjunto de 1.000
+  claves, mitad presentes y mitad ausentes; si las claves reales estuvieran casi siempre al inicio, la lineal
+  ser\'ia mucho m\'as barata y $k^*$ mucho mayor. (ii) Si despu\'es de ordenar se necesitar\'an los datos en su orden
+  original, habr\'ia que conservar una copia. (iii) Si los datos cambian entre b\'usquedas, hay que volver a ordenar
+  y la ecuaci\'on~\eqref{eq:kstar} deja de aplicar.
+\end{itemize}
+
+% ============================================================================== COMPARACI\'ON ENTRE EQUIPOS
+\section{Comparaci\'on entre los dos equipos}\label{sec:equipos}
+
+La Tabla~\ref{tab:cross} muestra el cociente de tiempos equipo~B / equipo~A con $n=1.000.000$ (valores mayores
+que $\times1$ indican que B fue m\'as lento).
+
+\begin{table}[htbp]
+\centering
+\caption{Cociente de tiempos B/A con $n=1.000.000$ (entrada aleatoria para ordenamiento; 1.000 claves para
+b\'usqueda).}\label{tab:cross}
+\input{tables/cross.tex}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{Mismas conclusiones, distinta escala.} En todos los casos el equipo~B fue m\'as lento (entre
+  $\times1{,}1$ y $\times3{,}6$; la mayor\'ia entre $\times1{,}3$ y $\times2{,}0$), pero el orden de los
+  algoritmos, los factores de crecimiento, los efectos del orden de entrada, la brecha Java--Python y los
+  umbrales $k^*$ de Python son cualitativamente los mismos. Las conclusiones, por tanto, no dependen del
+  equipo.
+  \item \textbf{Donde m\'as se separan los equipos.} Los algoritmos cuyo costo est\'a dominado por accesos
+  dispersos a memoria (Bucket Sort $\times3{,}6$ y Radix Sort $\times2{,}8$ en Java) se degradan m\'as en B que los
+  dominados por c\'omputo (Merge, Heap, Dual-Pivot: $\times1{,}5$--$1{,}6$), y la b\'usqueda lineal en Java (acceso
+  secuencial) casi no cambia ($\times1{,}07$). Es consistente con que B tenga una jerarqu\'ia de memoria menos
+  favorable que A, aunque sin perfilar el hardware esa es solo una hip\'otesis.
+  \item \textbf{Variabilidad.} Algunos tiempos de Java con $n=1.000$ (por ejemplo, Heap Sort en A) se alejan de
+  lo esperado por efectos de calentamiento del JIT; con $n\ge10.000$ las desviaciones est\'andar son peque\~nas
+  frente al promedio en la mayor\'ia de los casos (ver Anexo).
+\end{itemize}
+
+% ============================================================================== USO DE IA
+\section{Uso de inteligencia artificial}
+
+Se utiliz\'o \textbf{Claude Code} (Anthropic) como herramienta de apoyo en las siguientes partes del trabajo:
+\begin{itemize}
+  \item \textbf{Implementaci\'on de los algoritmos y de los programas de medici\'on:} primera versi\'on del c\'odigo
+  en Java y Python, adaptada de los art\'iculos de GeeksforGeeks de la Tabla~\ref{tab:fuentes}, y de los
+  programas de medici\'on (calentamiento, repeticiones, verificaci\'on y estimaci\'on de tiempos).
+  \item \textbf{Generaci\'on de gr\'aficas y tablas:} scripts en Python (matplotlib) que leen los CSV y
+  producen las gr\'aficas; script que genera las tablas en \LaTeX{} de este documento a partir de los CSV de los
+  dos equipos.
+  \item \textbf{Investigaci\'on y redacci\'on:} consulta de las complejidades te\'oricas y redacci\'on de un
+  borrador de los an\'alisis y del documento \LaTeX{}, a partir de los resultados medidos.
+\end{itemize}
+Las mediciones se ejecutaron en los dos equipos por el grupo; la herramienta no gener\'o ni modific\'o ning\'un
+dato experimental. \pendiente{El grupo debe revisar este texto y ajustarlo para que describa con exactitud
+el uso real que hizo, y revisar con sus propias palabras los an\'alisis antes de entregar.}
+
+% ============================================================================== CONCLUSIONES
+\section{Conclusiones}
+
+\begin{enumerate}
+  \item \textbf{El comportamiento coincide con la teor\'ia.} Al multiplicar $n$ por 10, Insertion Sort multiplic\'o
+  su tiempo por $\approx100$ ($O(n^2)$), Merge Sort, Heap Sort y Dual-Pivot QuickSort por $\approx11$--$13$
+  ($O(n\log n)$) y Radix Sort por $\approx10$ ($O(n)$), en Java y en Python y en ambos equipos. Las
+  desviaciones (hasta $\times17$--$19$ en Radix y Bucket Sort con $n=10^6$) se explican por la jerarqu\'ia de
+  memoria y por los costos del JIT con $n$ peque\~no, no por un error de complejidad.
+  \item \textbf{El orden de entrada puede cambiar la complejidad.} Insertion Sort pas\'o de 361~ms a 53~$\mu$s
+  ($n=10^5$, Java, A) con entrada ascendente, pero fue el doble de lento con descendente. Dual-Pivot QuickSort
+  con pivotes en los extremos degener\'o a $O(n^2)$ con datos ordenados y fall\'o por desbordamiento de pila
+  (Java, $n=10^5$) o por el l\'imite de recursi\'on (Python, $n=10^4$). Merge, Heap, Radix y Bucket Sort no
+  cambiaron de complejidad con el orden.
+  \item \textbf{Mejores algoritmos.} Con $n=10^6$ aleatorio, Bucket Sort fue el m\'as r\'apido (9,08~ms en Java A;
+  0,486~s en Python A), seguido de Radix Sort en Java y de Dual-Pivot QuickSort en Python. Entre los comparativos,
+  Dual-Pivot QuickSort gan\'o con datos aleatorios, pero es el \'unico que no es seguro con datos ordenados. Los no
+  comparativos superan al l\'imite $\Omega(n\log n)$ porque no comparan, a cambio de supuestos sobre los datos
+  (d\'igitos fijos, distribuci\'on uniforme).
+  \item \textbf{Compilado frente a interpretado.} Java fue entre $\times8$ y $\times250$ m\'as r\'apido. La
+  brecha es peque\~na ($\times8$--$14$) en b\'usquedas logar\'itmicas y en Merge Sort/Dual-Pivot QuickSort, y
+  grande ($\times50$--$250$) en lo que repite muchas iteraciones simples (b\'usqueda lineal y por saltos,
+  Insertion, Radix y Bucket Sort).
+  \item \textbf{B\'usqueda.} Con datos uniformes, la interpolaci\'on fue la m\'as r\'apida; binaria, ternaria y
+  exponencial quedaron empatadas dentro del ruido; la de saltos creci\'o como $\sqrt n$ y la lineal, como $n$. La
+  posici\'on de la clave solo importa para los m\'etodos que recorren desde el inicio (lineal, saltos y, en
+  menor medida, exponencial e interpolaci\'on).
+  \item \textbf{\textquestiondown Ordenar o no ordenar?} Para $n=10^6$ conviene ordenar con Bucket Sort y usar
+  b\'usqueda binaria a partir de $k^*\approx58$--$227$ b\'usquedas, seg\'un lenguaje y equipo.
+  \item \textbf{Limitaciones.} Cinco repeticiones por medici\'on; los valores estimados (Insertion Sort en Python
+  con $n=10^6$ y Dual-Pivot QuickSort con entrada ordenada) escalan con un modelo te\'orico y deben leerse como
+  aproximaciones; las explicaciones sobre cach\'e, JIT y predicci\'on de ramificaciones son hip\'otesis razonables
+  que no verificamos con herramientas de perfilado.
+\end{enumerate}
+
+% ============================================================================== BIBLIOGRAF\'IA
+\begin{thebibliography}{9}
+\bibitem{clrs} T.~H.~Cormen, C.~E.~Leiserson, R.~L.~Rivest y C.~Stein, \emph{Introduction to Algorithms},
+  3.\textsuperscript{a} ed., MIT Press, 2009. Cap.~8, Teorema~8.1 (cota inferior de ordenamiento por comparaciones).
+\bibitem{gfg} GeeksforGeeks, art\'iculos de algoritmos de ordenamiento y b\'usqueda (ver Tabla~\ref{tab:fuentes}).
+  \url{https://www.geeksforgeeks.org/}
+\end{thebibliography}
+
+% ================================================================================= ANEXO
+\clearpage
+\appendix
+\section{Tablas completas de resultados}\label{anexo}
+
+Promedio $\pm$ desviaci\'on est\'andar muestral de 5 repeticiones. <<$\sim$\,\ldots\,(est.)>> indica un valor
+estimado, no medido.
+
+\subsection{Equipo A}
+
+\begin{table}[H]
+\centering
+\caption{Equipo A, ordenamiento en Java.}\input{tables/full_sort_A_java.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo A, ordenamiento en Python.}\input{tables/full_sort_A_python.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo A, b\'usqueda en Java (tiempo por b\'usqueda, 1.000 claves).}\input{tables/full_search_A_java.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo A, b\'usqueda en Python (tiempo por b\'usqueda, 1.000 claves).}\input{tables/full_search_A_python.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo A: registro de valores estimados y fallos.}\label{tab:issuesA}\input{tables/issues_A.tex}
+\end{table}
+
+\subsection{Equipo B}
+
+\begin{table}[H]
+\centering
+\caption{Equipo B, ordenamiento en Java.}\input{tables/full_sort_B_java.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo B, ordenamiento en Python.}\input{tables/full_sort_B_python.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo B, b\'usqueda en Java (tiempo por b\'usqueda, 1.000 claves).}\input{tables/full_search_B_java.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo B, b\'usqueda en Python (tiempo por b\'usqueda, 1.000 claves).}\input{tables/full_search_B_python.tex}
+\end{table}
+\begin{table}[H]
+\centering
+\caption{Equipo B: registro de valores estimados y fallos.}\label{tab:issuesB}\input{tables/issues_B.tex}
+\end{table}
+
+\end{document}

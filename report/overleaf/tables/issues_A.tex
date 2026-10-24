@@ -1,0 +1,19 @@
+{\tiny
+\begin{tabular}{lllrlp{4.6cm}}
+\toprule
+Lenguaje & Algoritmo & Entrada & $n$ & Estado & Nota \\
+\midrule
+Java & DualPivotQuickSort & asc & 100.000 & ERROR\_StackOverflowError & StackOverflowError at n=100000; scaled from n=10000 \\
+Java & DualPivotQuickSort & asc & 1.000.000 & ESTIMATED & same failure expected (recursion depth grows with n); scaled from n=10000 \\
+Java & DualPivotQuickSort & desc & 100.000 & ERROR\_StackOverflowError & StackOverflowError at n=100000; scaled from n=10000 \\
+Java & DualPivotQuickSort & desc & 1.000.000 & ESTIMATED & same failure expected (recursion depth grows with n); scaled from n=10000 \\
+Python & DualPivotQuickSort & asc & 10.000 & ERROR\_RecursionError & RecursionError at n=10000 (limit 1000); scaled from n=1000 \\
+Python & DualPivotQuickSort & asc & 100.000 & ESTIMATED & same failure expected (recursion depth grows with n); scaled from n=1000 \\
+Python & DualPivotQuickSort & asc & 1.000.000 & ESTIMATED & same failure expected (recursion depth grows with n); scaled from n=1000 \\
+Python & DualPivotQuickSort & desc & 10.000 & ERROR\_RecursionError & RecursionError at n=10000 (limit 1000); scaled from n=1000 \\
+Python & DualPivotQuickSort & desc & 100.000 & ESTIMATED & same failure expected (recursion depth grows with n); scaled from n=1000 \\
+Python & DualPivotQuickSort & desc & 1.000.000 & ESTIMATED & same failure expected (recursion depth grows with n); scaled from n=1000 \\
+Python & InsertionSort & desc & 1.000.000 & ESTIMATED & predicted 12413s $>$ limit 300s; scaled from n=100000 \\
+Python & InsertionSort & random & 1.000.000 & ESTIMATED & predicted 6890s $>$ limit 300s; scaled from n=100000 \\
+\bottomrule
+\end{tabular}}\par
