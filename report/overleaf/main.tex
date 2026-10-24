@@ -200,7 +200,7 @@ est\'andar, si el valor fue medido o estimado, y el estado de la ejecuci\'on.
 
 \paragraph{Entorno de pruebas.}\label{par:entorno} La Tabla~\ref{tab:entorno} resume los dos equipos. Las
 corridas se hicieron con los benchmarks ejecutados uno tras otro (nunca en paralelo)
-\pendiente{confirmar: equipo conectado a la corriente y sin otras aplicaciones pesadas}.
+El equipo~B estuvo conectado a la corriente \pendiente{confirmar lo mismo para el equipo A y que no hab\'ia otras aplicaciones pesadas}.
 
 \begin{table}[htbp]
 \centering
@@ -210,11 +210,13 @@ corridas se hicieron con los benchmarks ejecutados uno tras otro (nunca en paral
 \toprule
  & Equipo A (\code{results/}) & Equipo B (\code{resultsv2/}) \\
 \midrule
-Sistema operativo & macOS 26.6.2 & \pendiente{completar} \\
-Procesador / n\'ucleos & Apple Silicon (arm64) \pendiente{modelo} & \pendiente{completar} \\
-Memoria RAM & \pendiente{completar} & \pendiente{completar} \\
-Java (JIT) & 27.0.1.0.2 & \pendiente{completar} \\
-Python & 3.15.1 & \pendiente{completar} \\
+Equipo & MacBook Air (M4) & ASUS Vivobook X1605ZA \\
+Sistema operativo & macOS 26.6.2 & Fedora Linux 44 (Workstation) \\
+Procesador & Apple M4 (arm64) & Intel Core i5-12500H, 12.\textsuperscript{a} gen., 16 hilos \\
+Memoria RAM & 16 GB & 16 GB \\
+Almacenamiento & SSD de 256 GB & SSD M.2 de 1 TB \\
+Java (JIT) & 27.0.1.0.2 & \pendiente{completar versi\'on} \\
+Python & 3.15.1 & \pendiente{completar versi\'on} \\
 \bottomrule
 \end{tabular}}
 \end{table}
